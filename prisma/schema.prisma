@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// model User {
+//   id         Int             @id @default(autoincrement())
+//   email      String          @unique
+//   name       String?
+//   devGames   Games[]
+//   favGames   FavoriteGame[]
+// }
+
+// model Games {
+//   id String @id @default(uuid())
+//   name String
+//   genre String
+//   userId Int
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+// }
+
+// model FavoriteGame {
+//   id      Int    @id @default(autoincrement())
+//   rating  Float
+
+//   userId  Int
+//   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   GameId  String
+//   game    Games @relation(fields: [GameId], references: [id], onDelete: Cascade)
+// }
+
+model User {
+  id        Int              @id @default(autoincrement())
+  email     String           @unique
+  name      String?
+  devGames  Game[]
+  favGames  FavoriteGame[]
+}
+
+model Game {
+  id      String   @id @default(uuid())
+  name    String
+  genre   String
+
+  userId  Int
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  favoritedBy FavoriteGame[] @relation("GameFavorites")
+}
+
+model FavoriteGame {
+  id      Int    @id @default(autoincrement())
+  rating  Float
+
+  userId  Int
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gameId  String
+  game   Game @relation("GameFavorites", fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
