@@ -14,19 +14,22 @@ datasource db {
 }
 
 // model User {
-//   id         Int             @id @default(autoincrement())
-//   email      String          @unique
-//   name       String?
-//   devGames   Games[]
-//   favGames   FavoriteGame[]
+//   id        Int              @id @default(autoincrement())
+//   email     String           @unique
+//   name      String?
+//   devGames  Game[]
+//   favGames  FavoriteGame[]
 // }
 
-// model Games {
-//   id String @id @default(uuid())
-//   name String
-//   genre String
-//   userId Int
-//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+// model Game {
+//   id      String   @id @default(uuid())
+//   name    String
+//   genre   String
+
+//   userId  Int
+//   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+//   favoritedBy FavoriteGame[] @relation("GameFavorites")
 // }
 
 // model FavoriteGame {
@@ -35,39 +38,55 @@ datasource db {
 
 //   userId  Int
 //   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   GameId  String
-//   game    Games @relation(fields: [GameId], references: [id], onDelete: Cascade)
+
+//   gameId  String
+//   game   Game @relation("GameFavorites", fields: [gameId], references: [id])
+
+//   @@unique([userId, gameId])
 // }
 
 model User {
-  id        Int              @id @default(autoincrement())
-  email     String           @unique
-  name      String?
-  devGames  Game[]
-  favGames  FavoriteGame[]
+  id        String      @id @default(uuid())
+  age       Int
+  email     String   @unique
+  name      String
+  role      Role     @default(BASIC)
+  writtenPosts Post[] @relation("WrittenPosts")
+  favoritePosts Post[] @relation("FavoritePosts")
+  userPreference UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String? @unique
+
+  @@unique([age, email, name])
+  @@index([email])
 }
 
-model Game {
-  id      String   @id @default(uuid())
-  name    String
-  genre   String
-
-  userId  Int
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  favoritedBy FavoriteGame[] @relation("GameFavorites")
+model UserPreference {
+  id        String   @id @default(uuid())
+  emailUpdates Boolean
+  user User?
 }
 
-model FavoriteGame {
-  id      Int    @id @default(autoincrement())
-  rating  Float
-
-  userId  Int
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  gameId  String
-  game   Game @relation("GameFavorites", fields: [gameId], references: [id])
-
-  @@unique([userId, gameId])
+model Post {
+  id        String      @id @default(uuid())
+  title     String
+  averageRating Float   @default(0.0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  authorId  String
+  author    User     @relation("WrittenPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  favoritedById String?
+  favoritedBy User? @relation("FavoritePosts", fields: [favoritedById], references: [id], onDelete: Cascade)
+  categories Category[]
 }
 
+model Category {
+  id    String   @id @default(uuid())
+  name  String   @unique
+  posts Post[]
+}
+
+enum Role {
+  BASIC
+  ADMIN
+  MODERATOR
+}
